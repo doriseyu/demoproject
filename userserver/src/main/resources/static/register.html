@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+</head>
+<body>
+    <form th:action="@{'/user/register'}" method="post" id="regForm">
+        <table>
+            <tr>
+                <td>用户名：</td>
+                <td><input type="text" name="username"></td>
+            </tr>
+            <tr>
+                <td>性别：</td>
+                <td>
+                    <label><input type="radio" name="sex" value="0"/>男</label>
+                    <label><input type="radio" name="sex" value="1"/>女</label>
+                </td>
+            </tr>
+            <tr>
+                <td>出生日期：</td>
+                <td><input type="text" name="birthday"></td>
+            </tr>
+            <tr>
+                <td colspan="2"><input type="submit" value="注册"></td>
+            </tr>
+        </table>
+    </form>
+    <script>
+        //获取表单对象，并添加提交实践监听器，监听函数中第二个参数是一个函数，中间会自动传入实践对象
+        document.getElementById("regForm").addEventListener("submit",function (event){
+            //阻止默认提交事件的发生
+            event.preventDefault();
+            //获取表单中的所有元素
+            let elements = this.elements;
+            //遍历元素的值加入对象结构
+            let objectUtil = {};
+            for (let i=0;i < elements.length;i++){
+                objectUtil[elements[i].name] = elements[i].value;
+            }
+            //至此表单中所有数据都被装入js对象，我们将对象转为json对象，备传
+            let jsonRel = JSON.stringify(objectUtil);
+            //创建XmlHttpRequest对象
+            var toFile = new XMLHttpRequest();
+            //指定请求类型，路径及是否异步
+            toFile.open("post","http://localhost:8080/user/register",true);
+            //设置请求头，变为application/json类型
+            toFile.setRequestHeader("Content-Type","application/json");
+            //发送数据
+            toFile.send(jsonRel);
+            //最后监听返回状态，一旦发生改变，就跳转页面
+            toFile.onreadystatechange = function (){
+                //toFile.readyState==4：此阶段曲儿全部数据都已经解析为客户端可用的格式，解析已经完成，
+                //                      可以通过XMLHttpRequest对象的相应属性取得数据
+                //toFile.status == 200：OK一切正常，对GET和POST请求的应答文档跟在后面
+                if (toFile.readyState == 4 && toFile.status == 200){
+                    //alert("数据添加成功");
+                    //接受返回页面，并打开新窗口显示
+                    let userId=toFile.responseText;
+                    if (userId != 0){
+                        var goTo = new XMLHttpRequest();
+                        goTo.open("get","http://localhost:8080/user/info?id="+userId,true);
+                        goTo.setRequestHeader("Content-Type","application/json");
+                        goTo.send(null);
+                        goTo.onreadystatechange = function (){
+                            if (goTo.readyState == 4 && goTo.status == 200){
+                                alert("注册成功");
+                                let responesRel = goTo.responseText;
+                                document.write(responesRel);
+                            }
+                        }
+                    }else {
+                        alert("注册用户数据添加失败")
+                    }
+                }
+            }
+        })
+    </script>
+</body>
+</html>
